@@ -1,5 +1,8 @@
-from flask import Flask, Response, jsonify, request
+import os
+import requests
 
+from flask import Flask, Response
+from dotenv import load_dotenv, find_dotenv
 from .errors import errors
 
 app = Flask(__name__)
@@ -11,16 +14,30 @@ def index():
     return Response("Hello, world!", status=200)
 
 
-@app.route("/custom", methods=["POST"])
+@app.route("/getnews", methods=["POST"])
 def custom():
-    payload = request.get_json()
+    load_dotenv(find_dotenv())
+    NEWS_API_KEY = os.environ.get('NEWS_API_KEY')
 
-    if payload.get("say_hello") is True:
-        output = jsonify({"message": "Hello!"})
-    else:
-        output = jsonify({"message": "..."})
+    url = f"https://newsapi.org/v2/top-headlines/sources?language=en&apiKey={NEWS_API_KEY}"
+    r = requests.get(url).json()
 
-    return output
+    urls = []
+
+    for sources in r['sources']:
+        urls.append(sources['url'])
+
+    domains = ""
+
+    for url in urls:
+        domains += f"{url[7:]},"
+
+    url = (f"https://newsapi.org/v2/everything?"
+           f"domains={domains}"
+           f"&apiKey={NEWS_API_KEY}")
+    r = requests.get(url).json()
+
+    return r
 
 
 @app.route("/health")
