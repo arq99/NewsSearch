@@ -3,10 +3,6 @@ import requests
 
 from flask import Flask, Response, request
 from dotenv import load_dotenv, find_dotenv
-import string
-import nltk
-from nltk.tokenize import TreebankWordTokenizer
-from nltk.stem.porter import PorterStemmer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
