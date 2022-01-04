@@ -1,3 +1,4 @@
+import json
 import pytest
 from api.app import app
 
@@ -8,8 +9,12 @@ def client():
         yield client
 
 
-def test_index(client):
-    assert client.get("/").status_code == 200
+def test_all_news(client):
+    assert client.get("/allnews").status_code == 200
+
+
+def test_search(client):
+    assert client.post("/search", query_string={'query': 'Technology'}).status_code == 200
 
 
 def test_health(client):

@@ -1,8 +1,13 @@
 import os
 import requests
 
+import json
+import string
+
 from flask import Flask, Response, request
 from dotenv import load_dotenv, find_dotenv
+from nltk.tokenize import TreebankWordTokenizer
+from nltk.stem.porter import PorterStemmer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
@@ -48,7 +53,7 @@ def tokenize_and_stem(s):
 
 
 @app.route("/allnews", methods=["GET"])
-def allnews():
+def all_news():
     return Response(getnewsarticles(), 200)
 
 
@@ -78,7 +83,7 @@ def search():
     for i in range(10):
         relevant_searches.append(docs[ranks[i]])
 
-    return Response(relevant_searches, 200)
+    return Response(json.dumps(relevant_searches), 200)
 
 
 @app.route("/health")
