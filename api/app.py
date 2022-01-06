@@ -4,7 +4,7 @@ import requests
 import json
 import string
 
-from flask import Flask, Response, request
+from flask import Flask, Response, request, abort
 from dotenv import load_dotenv, find_dotenv
 from nltk.tokenize import TreebankWordTokenizer
 from nltk.stem.porter import PorterStemmer
@@ -17,7 +17,7 @@ app = Flask(__name__)
 app.register_blueprint(errors)
 
 
-def getnewsarticles():
+def get_news_articles():
     load_dotenv(find_dotenv())
     NEWS_API_KEY = os.environ.get('NEWS_API_KEY')
 
@@ -54,13 +54,17 @@ def tokenize_and_stem(s):
 
 @app.route("/allnews", methods=["GET"])
 def all_news():
-    return Response(getnewsarticles(), 200)
+    return get_news_articles()
 
 
 @app.route("/search", methods=["POST"])
 def search():
     query = request.args.get('query')
-    articles = getnewsarticles()['articles']
+
+    if not query:
+        abort(400, description="The search query is invalid")
+
+    articles = get_news_articles()['articles']
 
     docs = []
 
@@ -81,7 +85,7 @@ def search():
     relevant_searches = []
 
     for i in range(10):
-        relevant_searches.append(docs[ranks[i]])
+        relevant_searches.append(get_news_articles()['articles'][ranks[i]])
 
     return Response(json.dumps(relevant_searches), 200)
 
