@@ -1,11 +1,13 @@
 import os
-import requests
-
 import json
 import string
 
 from flask import Flask, Response, request, abort
+
 from dotenv import load_dotenv, find_dotenv
+
+from newsapi import NewsApiClient
+
 from nltk.tokenize import TreebankWordTokenizer
 from nltk.stem.porter import PorterStemmer
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -16,30 +18,25 @@ from .errors import errors
 app = Flask(__name__)
 app.register_blueprint(errors)
 
+load_dotenv(find_dotenv())
+NEWS_API_KEY = os.environ.get('NEWS_API_KEY')
+
+newsapi = NewsApiClient(api_key=NEWS_API_KEY)
+
 
 def get_news_articles():
-    load_dotenv(find_dotenv())
-    NEWS_API_KEY = os.environ.get('NEWS_API_KEY')
+    sources = newsapi.get_sources()
 
-    url = f"https://newsapi.org/v2/top-headlines/sources?language=en&apiKey={NEWS_API_KEY}"
-    r = requests.get(url).json()
+    ids = []
 
-    urls = []
+    for source in sources['sources']:
+        if source['language'] == 'en':
+            ids.append(source['id'])
 
-    for sources in r['sources']:
-        urls.append(sources['url'])
+    ids = ','.join(ids)
 
-    domains = ""
-
-    for url in urls:
-        domains += f"{url[7:]},"
-
-    url = (f"https://newsapi.org/v2/everything?"
-           f"domains={domains}"
-           f"&apiKey={NEWS_API_KEY}"
-           f"&pageSize=100")
-    articles = requests.get(url).json()
-
+    articles = newsapi.get_everything(sources=ids,
+                                      page_size=100)
     return articles
 
 
@@ -69,7 +66,7 @@ def search():
     docs = []
 
     for article in articles:
-        docs.append(article['description'])
+        docs.append(article['title'])
 
     vectorizer = TfidfVectorizer(tokenizer=tokenize_and_stem, stop_words='english')
 
