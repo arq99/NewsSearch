@@ -13,6 +13,12 @@ from nltk.stem.porter import PorterStemmer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
+import pandas as pd
+
+import numpy as np
+
+from database.mongodb import MongoDB
+
 from .errors import errors
 
 app = Flask(__name__)
@@ -23,68 +29,29 @@ NEWS_API_KEY = os.environ.get('NEWS_API_KEY')
 
 newsapi = NewsApiClient(api_key=NEWS_API_KEY)
 
-
-def get_news_articles():
-    sources = newsapi.get_sources()
-
-    ids = []
-
-    for source in sources['sources']:
-        if source['language'] == 'en':
-            ids.append(source['id'])
-
-    ids = ','.join(ids)
-
-    articles = newsapi.get_everything(sources=ids,
-                                      page_size=100)
-    return articles
-
-
-def tokenize_and_stem(s):
-    STEMMER = PorterStemmer()
-    TOKENIZER = TreebankWordTokenizer()
-    REMOVE_PUNCTUATION_TABLE = str.maketrans({x: None for x in string.punctuation})
-
-    return [STEMMER.stem(t) for t
-            in TOKENIZER.tokenize(s.translate(REMOVE_PUNCTUATION_TABLE))]
+connection = MongoDB.get_connection()
+db = connection.newsarticles
 
 
 @app.route("/allnews", methods=["GET"])
 def all_news():
-    return get_news_articles()
+    page = int(request.args.get('page'))
+    cursor = db.articles.find({}).skip((page-1) * 10).limit(page * 10)
+    data = []
+
+    for article in cursor:
+        article['_id'] = str(article['_id'])
+        data.append(article)
+
+    return {
+        "articles": data,
+        "results": len(data),
+    }
 
 
-@app.route("/search", methods=["POST"])
+@app.route("/search", methods=["GET"])
 def search():
-    query = request.args.get('query')
-
-    if not query:
-        abort(400, description="The search query is invalid")
-
-    articles = get_news_articles()['articles']
-
-    docs = []
-
-    for article in articles:
-        docs.append(article['title'])
-
-    vectorizer = TfidfVectorizer(tokenizer=tokenize_and_stem, stop_words='english')
-
-    vectorizer.fit(docs)
-
-    query_vector = vectorizer.transform([query]).todense()
-
-    doc_vectors = vectorizer.transform(docs)
-    similarity = cosine_similarity(query_vector, doc_vectors)
-
-    ranks = (-similarity).argsort(axis=None)
-
-    relevant_searches = []
-
-    for i in range(10):
-        relevant_searches.append(get_news_articles()['articles'][ranks[i]])
-
-    return Response(json.dumps(relevant_searches), 200)
+    return Response("OK", status=200)
 
 
 @app.route("/health")

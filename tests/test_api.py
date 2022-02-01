@@ -14,9 +14,9 @@ def test_all_news(client):
 
 
 def test_search(client):
-    assert client.post("/search", query_string={'query': 'Technology'}).status_code == 200
-    assert client.post("/search", query_string={'query': ''}).status_code == 400
-    assert client.post("/search").status_code == 400
+    assert client.get("/search", query_string={'query': 'Technology'}).status_code == 200
+    assert client.get("/search", query_string={'query': ''}).status_code == 400
+    assert client.get("/search").status_code == 400
 
 
 def test_health(client):
