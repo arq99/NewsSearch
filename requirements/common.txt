@@ -1,6 +1,0 @@
-flask
-gunicorn
-dotenv
-sklearn
-nltk
-newsapi-python
