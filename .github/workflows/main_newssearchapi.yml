@@ -22,15 +22,15 @@ jobs:
     - name: Log in to registry
       uses: docker/login-action@v1
       with:
-        registry: https://newssearch.azurecr.io/
-        username: ${{ secrets.AzureAppService_ContainerUsername_5a0b8b8b7e4245468e2e67b62f065de6 }}
-        password: ${{ secrets.AzureAppService_ContainerPassword_60539fdac60448b9b04f28748c723ba6 }}
+        registry: https://index.docker.io/v1/
+        username: ${{ secrets.AzureAppService_ContainerUsername_aa6fb5cbe0864ce5a3de02fdc1970254 }}
+        password: ${{ secrets.AzureAppService_ContainerPassword_a544a20aa571400389effae7ae6d4217 }}
 
     - name: Build and push container image to registry
       uses: docker/build-push-action@v2
       with:
         push: true
-        tags: newssearch.azurecr.io/${{ secrets.AzureAppService_ContainerUsername_5a0b8b8b7e4245468e2e67b62f065de6 }}/mcr.microsoft.com/appsvc/staticsite:${{ github.sha }}
+        tags: index.docker.io/${{ secrets.AzureAppService_ContainerUsername_aa6fb5cbe0864ce5a3de02fdc1970254 }}/newssearch:${{ github.sha }}
         file: ./Dockerfile
 
   deploy:
@@ -47,5 +47,5 @@ jobs:
       with:
         app-name: 'newssearchapi'
         slot-name: 'production'
-        publish-profile: ${{ secrets.AzureAppService_PublishProfile_c37891c207014b9993ed5f75f1d4f8a1 }}
-        images: 'newssearch.azurecr.io/${{ secrets.AzureAppService_ContainerUsername_5a0b8b8b7e4245468e2e67b62f065de6 }}/mcr.microsoft.com/appsvc/staticsite:${{ github.sha }}'
+        publish-profile: ${{ secrets.AzureAppService_PublishProfile_56ebfd037d184408b4ca509d4576b7fe }}
+        images: 'index.docker.io/${{ secrets.AzureAppService_ContainerUsername_aa6fb5cbe0864ce5a3de02fdc1970254 }}/newssearch:${{ github.sha }}'
