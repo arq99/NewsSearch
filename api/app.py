@@ -14,7 +14,7 @@ db = connection.newsarticles
 @app.route("/all", methods=["GET"])
 def all_news():
     page = int(request.args.get('page'))
-    cursor = db.articles.find({}).skip((page-1) * 10).limit(page * 10)
+    cursor = db.articles.find({}).skip((page-1) * 10).limit(10)
     data = []
 
     for article in cursor:
