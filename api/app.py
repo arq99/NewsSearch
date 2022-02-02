@@ -11,7 +11,7 @@ connection = MongoDB.get_connection()
 db = connection.newsarticles
 
 
-@app.route("/allnews", methods=["GET"])
+@app.route("/all", methods=["GET"])
 def all_news():
     page = int(request.args.get('page'))
     cursor = db.articles.find({}).skip((page-1) * 10).limit(page * 10)
@@ -19,6 +19,7 @@ def all_news():
 
     for article in cursor:
         article['_id'] = str(article['_id'])
+        article.pop('article', None)
         data.append(article)
 
     return {
