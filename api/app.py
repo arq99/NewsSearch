@@ -1,4 +1,4 @@
-from flask import Flask, Response, request
+from flask import Flask, Response, request, abort
 
 from database.mongodb import MongoDB
 
@@ -13,13 +13,20 @@ db = connection.newsarticles
 
 @app.route("/all", methods=["GET"])
 def all_news():
-    page = int(request.args.get('page'))
-    cursor = db.articles.find({}).skip((page-1) * 10).limit(10)
+    if 'page' in request.args:
+        page = request.args.get("page")
+        if page.isnumeric() and int(page) > 0:
+            page = int(page)
+        else:
+            abort(400, "Page number must be an interger and greater than 0")
+    else:
+        abort(400, "Page number must be specified")
+    cursor = db.articles.find({}).skip((page - 1) * 10).limit(20)
     data = []
 
     for article in cursor:
-        article['_id'] = str(article['_id'])
-        article.pop('article', None)
+        article["_id"] = str(article["_id"])
+        article.pop("article", None)
         data.append(article)
 
     return {
