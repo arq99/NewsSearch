@@ -10,9 +10,25 @@ app.register_blueprint(errors)
 connection = MongoDB.get_connection()
 db = connection.newsarticles
 
+# Get all articles
+cursor = db.articles.find()
+# Sort by date
+cursor.sort("date", -1)
+# Convert to list
+articles = list(cursor)
 
-@app.route("/all", methods=["GET"])
-def all_news():
+# Remove the image field from each article
+for article in articles:
+    article.pop("image")
+    article.pop("_id")
+    article.pop("content")
+    article.pop("keywords")
+
+
+
+@app.route("/latest", methods=["GET"])
+def latest_news():
+    # Get the page number from the query string
     if 'page' in request.args:
         page = request.args.get("page")
         if page.isnumeric() and int(page) > 0:
@@ -21,23 +37,15 @@ def all_news():
             abort(400, "Page number must be an interger and greater than 0")
     else:
         abort(400, "Page number must be specified")
-    cursor = db.articles.find({}).skip((page - 1) * 10).limit(20)
-    data = []
 
-    for article in cursor:
-        article["_id"] = str(article["_id"])
-        article.pop("article", None)
-        data.append(article)
+    # Get articles by the page number
+    data = articles[(page - 1) * 10:page * 10]
+    
 
     return {
         "articles": data,
         "results": len(data),
     }
-
-
-@app.route("/search", methods=["GET"])
-def search():
-    return Response("OK", status=200)
 
 
 @app.route("/health")
